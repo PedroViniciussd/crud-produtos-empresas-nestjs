@@ -1,90 +1,120 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# API CRUD de Produtos e Empresas com NestJS e Prisma
 
-## Descrição
+## Visão Geral
 
-Esse template ultiliza [NestJS](https://nestjs.com/) para a construção de um Back-end organizado, estruturado e escalável para grandes projetos, juntamente com [Prisma](https://www.prisma.io/) para as interações com banco de dados.
+Este projeto implementa uma API REST para gerenciar **Produtos** e **Empresas** utilizando o framework **NestJS** com **Prisma ORM** para acesso ao banco de dados. A API suporta operações básicas de CRUD (Create, Read, Update, Delete) para ambas as entidades.
 
-...
+## Tecnologias Utilizadas
 
-## Instalação
+- Node.js com NestJS (framework sobre Express.js)
+- Prisma ORM para manipulação do banco de dados (PostgreSQL, MySQL, etc)
+- TypeScript para tipagem estática
+- Swagger para documentação automática da API
+- ValidationPipe do NestJS para validação dos dados recebidos
+- Uso de DTOs para definir e validar os formatos de dados das requisições
 
-```bash
-$ npm install
-```
+## Estrutura do Projeto
 
-## Executando o APP
+### Endpoints criados
 
-**Rodar local**
+| Método | Rota               | Descrição                        | Acesso           |
+|--------|--------------------|---------------------------------|------------------|
+| POST   | /v1/empresa        | Criar nova empresa               | Público          |
+| GET    | /v1/empresa        | Listar todas as empresas         | Público          |
+| GET    | /v1/empresa/:id    | Buscar empresa pelo ID           | Público          |
+| PATCH  | /v1/empresa/:id    | Atualizar empresa                | Público          |
+| DELETE | /v1/empresa/:id    | Deletar empresa                  | Público          |
+| POST   | /v1/produto        | Criar novo produto (associado a empresa) | Público    |
+| GET    | /v1/produto        | Listar todos os produtos com dados da empresa | Público  |
+| GET    | /v1/produto/:id    | Buscar produto pelo ID           | Público          |
+| PATCH  | /v1/produto/:id    | Atualizar produto                | Público          |
+| DELETE | /v1/produto/:id    | Deletar produto                  | Público          |
 
-```bash
-# Comentar a variável de ambiente na .env que se refere a rodar com Docker Compose.
+### Observações:
+- O prefixo global da API é `/v1`
+- Todos os endpoints estão configurados como públicos (sem necessidade de autenticação), usando o decorator customizado `@IsPublic()`
+- As operações respeitam validação de dados com `class-validator` (ex: nome deve ser string não vazia, preço número positivo, empresaId inteiro)
+- O relacionamento Produto → Empresa é mantido via chave estrangeira `empresaId`, garantindo integridade referencial no banco de dados.
 
-DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+## Modelo Prisma (schema.prisma)
 
-# Cria as tabelas no banco.
-$ npx prisma db push
+\`\`\`prisma
+model Empresa {
+  id        Int       @id @default(autoincrement())
+  nome      String
+  cnpj      String
+  telefone  String?
+  produtos  Produto[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
 
-# Executar os seeds.
-$ npm run seed
+model Produto {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  preco     Float
+  empresaId Int
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+}
+\`\`\`
 
-# Comando para rodar em desenvolvimento (já executa o build).
-$ npm run start:dev
+## Exemplos de Requests válidos
 
-# Comando para rodar em produção (já executa o build).
-$ npm run start:prod
-```
+### Criar Empresa
 
-**Rodar via Docker Compose**
+\`\`\`json
+POST /v1/empresa
+{
+  "nome": "Empresa Teste",
+  "cnpj": "15245767567675",
+  "telefone": "123456789"
+}
+\`\`\`
 
-```bash
-# Comentar a variável de ambiente na .env que se refere a rodar local.
+### Criar Produto
 
-DATABASE_URL=mysql://<user>:<password>@<host>:<db_port>/<db_name>
+\`\`\`json
+POST /v1/produto
+{
+  "nome": "Creatina 250g",
+  "preco": 120.00,
+  "empresaId": 1
+}
+\`\`\`
 
-# Subir os containers.
-$ docker-compose up -d
+## Estrutura dos DTOs
 
-# Acessar o container.
-$ docker exec -it backend_application bash
+Exemplo de DTO para criação de Produto (`CreateProdutoDto`):
 
-# Cria as tabelas no banco.
-$ npx prisma db push
+\`\`\`typescript
+export class CreateProdutoDto {
+  @IsString()
+  @IsNotEmpty()
+  nome: string;
 
-# Executar os seeds.
-$ npm run seed
+  @IsNumber()
+  @IsPositive()
+  preco: number;
 
-# Comando para rodar em desenvolvimento (já executa o build).
-$ npm run start:dev
+  @IsInt()
+  empresaId: number;
+}
+\`\`\`
 
-# Comando para rodar em produção (já executa o build).
-$ npm run start:prod
-```
+## Configuração do NestJS
 
-## Test
+- Prefixo global da API: `/v1`
+- Swagger ativado via variável de ambiente para documentação
+- Uso do `ValidationPipe` para validar os dados das requisições
+- Segurança mínima via decorator `@IsPublic()` para permitir endpoints públicos
+- Configuração de CORS aberta para facilitar testes
 
-```bash
-# unit tests
-$ npm run test
+## Como testar
 
-# e2e tests
-$ npm run test:e2e
+- Rodar o servidor: `npm run start`
+- Usar o Postman, Insomnia ou curl para testar as rotas conforme exemplos acima (Testado com Postman)
+- A documentação Swagger está disponível em `/v1/docs` (se ativada)
 
-# test coverage
-$ npm run test:cov
-```
+## Contato
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+Para dúvidas ou mais informações, fico à disposição!
