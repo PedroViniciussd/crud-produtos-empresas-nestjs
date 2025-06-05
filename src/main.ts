@@ -46,7 +46,13 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document);
   }
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Remove propriedades que não estão nos DTOs
+      forbidNonWhitelisted: true, // Lança erro se enviar campos não permitidos
+      transform: true, // Converte tipos (ex: string para number)
+    }),
+  );
 
   await app.listen(process.env.PORT, () => console.log(`Server UP on PORT ${process.env.PORT}`));
 }

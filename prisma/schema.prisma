@@ -84,3 +84,28 @@ enum TextType {
   Tips
   Cookies
 }
+
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cnpj      String   @unique
+  telefone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  produtos  Produto[]
+
+  @@map("empresas")
+}
+
+
+model Produto {
+  id        Int     @id @default(autoincrement())
+  nome      String
+  preco     Float
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+  empresaId Int
+}
+
+
+

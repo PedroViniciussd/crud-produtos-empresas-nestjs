@@ -11,6 +11,8 @@ import { NoAuthModule } from './modules/no-auth/no-auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MobileModule } from './modules/mobile/mobile.module';
 import { WebModule } from './modules/web/web.module';
+import { EmpresaModule } from './empresa/empresa.module';
+import { ProdutoModule } from './produto/produto.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { WebModule } from './modules/web/web.module';
     AdminModule,
     MobileModule,
     WebModule,
+    EmpresaModule,
+    ProdutoModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
